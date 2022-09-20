@@ -30,9 +30,11 @@ module.exports.createUser = (req, res) => {
     .then(user => res.status(200).send({ data: user }))
     .catch(err => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({
-          message: 'Переданы некорректные данные при создании пользователя.'
-        });
+        return res
+          .status(400)
+          .send({
+            message: 'Переданы некорректные данные при создании пользователя.'
+          });
       }
       res.status(500).send({ message: 'Что-то пошло не так.' });
     });
@@ -55,9 +57,11 @@ module.exports.updateUser = (req, res) => {
     })
     .catch(err => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({
-          message: 'Переданы некорректные данные при создании пользователя.'
-        });
+        return res
+          .status(400)
+          .send({
+            message: 'Переданы некорректные данные при создании пользователя.'
+          });
       }
       console.dir(err);
       res.status(500).send({ message: 'Что-то пошло не так.' });
@@ -70,21 +74,24 @@ module.exports.updateAvatar = (req, res) => {
     req.user._id,
     { avatar },
     { new: true, runValidators: true }
-  );
-  then(user => {
-    if (!user) {
-      return res
-        .status(404)
-        .send({ message: 'Пользователь c указанным id не найден.' });
-    }
-    res.status(200).send({ data: user });
-  }).catch(err => {
-    if (err.name === 'ValidationError') {
-      return res.status(400).send({
-        message: 'Переданы некорректные данные при создании пользователя.'
-      });
-    }
-    console.dir(err);
-    res.status(500).send({ message: 'Что-то пошло не так.' });
-  });
+  )
+    .then(user => {
+      if (!user) {
+        return res
+          .status(404)
+          .send({ message: 'Пользователь c указанным id не найден.' });
+      }
+      res.status(200).send({ data: user });
+    })
+    .catch(err => {
+      if (err.name === 'ValidationError') {
+        return res
+          .status(400)
+          .send({
+            message: 'Переданы некорректные данные при создании пользователя.'
+          });
+      }
+      console.dir(err);
+      res.status(500).send({ message: 'Что-то пошло не так.' });
+    });
 };

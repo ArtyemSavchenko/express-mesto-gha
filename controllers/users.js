@@ -11,7 +11,7 @@ module.exports.getUserById = (req, res) => {
     .then(user => {
       if (!user) {
         return res
-          .status(400)
+          .status(404)
           .send({ message: 'Пользователь по указанному id не найден.' });
       }
       res.status(200).send(user);
@@ -30,11 +30,9 @@ module.exports.createUser = (req, res) => {
     .then(user => res.status(200).send({ data: user }))
     .catch(err => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(400)
-          .send({
-            message: 'Переданы некорректные данные при создании пользователя.'
-          });
+        return res.status(400).send({
+          message: 'Переданы некорректные данные при создании пользователя.'
+        });
       }
       res.status(500).send({ message: 'Что-то пошло не так.' });
     });
@@ -57,11 +55,9 @@ module.exports.updateUser = (req, res) => {
     })
     .catch(err => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(400)
-          .send({
-            message: 'Переданы некорректные данные при создании пользователя.'
-          });
+        return res.status(400).send({
+          message: 'Переданы некорректные данные при обновлении профиля.'
+        });
       }
       console.dir(err);
       res.status(500).send({ message: 'Что-то пошло не так.' });
@@ -85,11 +81,9 @@ module.exports.updateAvatar = (req, res) => {
     })
     .catch(err => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(400)
-          .send({
-            message: 'Переданы некорректные данные при создании пользователя.'
-          });
+        return res.status(400).send({
+          message: 'Переданы некорректные данные при создании пользователя.'
+        });
       }
       console.dir(err);
       res.status(500).send({ message: 'Что-то пошло не так.' });

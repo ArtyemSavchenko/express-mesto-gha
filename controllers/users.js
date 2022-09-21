@@ -17,8 +17,8 @@ module.exports.getUserById = (req, res) => {
       res.status(200).send(user);
     })
     .catch(err => {
-      if (err.kind === 'ObjectId') {
-        return res.status(400).send({ message: 'Неверный формат id.' });
+      if (err.name === 'CastError') {
+        return res.status(400).send({ err, message: 'Неверный формат id.' });
       }
       res.status(500).send({ message: 'Что-то пошло не так.' });
     });

@@ -5,11 +5,11 @@ const cardSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 2,
-    maxlength: 30,
+    maxlength: 30
   },
   link: {
     type: String,
-    required: true,
+    required: true
   },
   owner: {
     type: mongoose.ObjectId,
@@ -24,6 +24,6 @@ const cardSchema = new mongoose.Schema({
     type: Date,
     default: Date.now()
   }
-})
+});
 
 module.exports = mongoose.model('card', cardSchema);

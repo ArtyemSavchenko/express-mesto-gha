@@ -14,7 +14,7 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '63296068cb76f31896083eea'
+    _id: '63296068cb76f31896083eea',
   };
   next();
 });
@@ -26,5 +26,6 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log('App started on port ' + PORT);
+  // eslint-disable-next-line no-console
+  console.log(`App started on port ${PORT}`);
 });

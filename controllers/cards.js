@@ -7,14 +7,14 @@ const {
 
 module.exports.getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.status(200).send({ data: cards }))
+    .then((cards) => res.send({ data: cards }))
     .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
 };
 
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.status(200).send({ data: card }))
+    .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(DATA_ERR).send({ message: ' Переданы некорректные данные при создании карточки.' });
@@ -25,15 +25,14 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
-    .then((card) => {
-      if (!card) {
-        return res
-          .status(NOT_FOUND_ERR)
-          .send({ message: 'Карточка с указанным id не найдена.' });
-      }
-      return res.status(200).send({ message: 'Карточка удалена.' });
+    .orFail(() => {
+      throw new Error('NotFound');
     })
+    .then(() => res.send({ message: 'Карточка удалена.' }))
     .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR).send({ message: 'Карточка с указанным id не найдена.' });
+      }
       if (err.name === 'CastError') {
         return res.status(DATA_ERR).send({ message: 'Неверный формат id.' });
       }
@@ -47,15 +46,14 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => {
-      if (!card) {
-        return res
-          .status(NOT_FOUND_ERR)
-          .send({ message: 'Передан несуществующий id карточки.' });
-      }
-      return res.status(200).send({ data: card });
+    .orFail(() => {
+      throw new Error('NotFound');
     })
+    .then((card) => res.send({ data: card }))
     .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR).send({ message: 'Передан несуществующий id карточки.' });
+      }
       if (err.name === 'CastError') {
         return res.status(DATA_ERR).send({ message: 'Неверный формат id.' });
       }
@@ -69,15 +67,14 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => {
-      if (!card) {
-        return res
-          .status(NOT_FOUND_ERR)
-          .send({ message: 'Передан несуществующий id карточки.' });
-      }
-      return res.status(200).send({ data: card });
+    .orFail(() => {
+      throw new Error('NotFound');
     })
+    .then((card) => res.send({ data: card }))
     .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR).send({ message: 'Передан несуществующий id карточки.' });
+      }
       if (err.name === 'CastError') {
         return res.status(DATA_ERR).send({ message: 'Неверный формат id.' });
       }

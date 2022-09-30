@@ -1,3 +1,6 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { secretKey } = require('../utils/constants');
 const User = require('../models/user');
 const {
   DEFAULT_ERR,
@@ -8,6 +11,12 @@ const {
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
+    .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
+};
+
+module.exports.getUser = (req, res) => {
+  User.findOne({ _id: req.user._id })
+    .then((user) => res.send(user))
     .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
 };
 
@@ -29,12 +38,43 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    email,
+    password,
+    name,
+    about,
+    avatar,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      email,
+      password: hash,
+      name,
+      about,
+      avatar,
+    }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
+      if (err.code === 11000) {
+        return res.status(DATA_ERR).send({ message: 'Пользователь с таким адресом электронной почты уже существует.' });
+      }
       if (err.name === 'ValidationError') {
         return res.status(DATA_ERR).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+      }
+      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, secretKey, { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch((err) => {
+      if (err.status === 401) {
+        return res.status(err.status).send({ message: err.message });
       }
       return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
     });

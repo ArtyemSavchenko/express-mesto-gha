@@ -1,5 +1,5 @@
 const BadRequest = require('../errors/BadRequest');
-const NotFound = require('../errors/NotFound');
+const Forbidden = require('../errors/Forbidden');
 const Card = require('../models/card');
 const {
   DEFAULT_ERR,
@@ -26,21 +26,13 @@ module.exports.createCard = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
     .orFail(() => {
-      throw new NotFound('Карточка с указанным id не найдена.');
+      throw new Forbidden('Не удалось удалить карточку');
     })
     .then(() => res.send({ message: 'Карточка удалена.' }))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(NOT_FOUND_ERR).send({ message: 'Карточка с указанным id не найдена.' });
-      }
-      if (err.name === 'CastError') {
-        return res.status(DATA_ERR).send({ message: 'Неверный формат id.' });
-      }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+    .catch(next);
 };
 
 module.exports.likeCard = (req, res) => {

@@ -10,16 +10,16 @@ const {
 const NotFound = require('../errors/NotFound');
 const Conflict = require('../errors/Conflict');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
+    .catch(next);
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   User.findOne({ _id: req.user._id })
     .then((user) => res.send(user))
-    .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
+    .catch(next);
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -47,11 +47,14 @@ module.exports.createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .orFail(() => {
-      throw new Conflict('Пользователь с таким адресом электронной почты уже существует.');
-    })
     .then((user) => {
       res.send({ data: user });
+    })
+    .catch((err) => {
+      if (err.code === 11000) {
+        return Promise.reject(new Conflict('Пользователь с таким адресом электронной почты уже существует.'));
+      }
+      return Promise.reject(err);
     })
     .catch(next);
 };

@@ -8,6 +8,7 @@ const {
   DATA_ERR,
 } = require('../utils/constants');
 const NotFound = require('../errors/NotFound');
+const Conflict = require('../errors/Conflict');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -30,7 +31,7 @@ module.exports.getUserById = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     email,
     password,
@@ -46,18 +47,13 @@ module.exports.createUser = (req, res) => {
       about,
       avatar,
     }))
+    .orFail(() => {
+      throw new Conflict('Пользователь с таким адресом электронной почты уже существует.');
+    })
     .then((user) => {
       res.send({ data: user });
     })
-    .catch((err) => {
-      if (err.code === 11000) {
-        return res.status(DATA_ERR).send({ message: 'Пользователь с таким адресом электронной почты уже существует.' });
-      }
-      if (err.name === 'ValidationError') {
-        return res.status(DATA_ERR).send({ message: 'Переданы некорректные данные при создании пользователя.' });
-      }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+    .catch(next);
 };
 
 module.exports.login = (req, res, next) => {

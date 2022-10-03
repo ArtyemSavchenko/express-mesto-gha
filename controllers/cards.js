@@ -1,3 +1,5 @@
+const BadRequest = require('../errors/BadRequest');
+const NotFound = require('../errors/NotFound');
 const Card = require('../models/card');
 const {
   DEFAULT_ERR,
@@ -5,28 +7,29 @@ const {
   DATA_ERR,
 } = require('../utils/constants');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(DATA_ERR).send({ message: ' Переданы некорректные данные при создании карточки.' });
+        return Promise.reject(new BadRequest('Переданы некорректные данные при создании карточки.'));
       }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+      return Promise.reject(err);
+    })
+    .catch(next);
 };
 
 module.exports.deleteCard = (req, res) => {
   Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFound('Карточка с указанным id не найдена.');
     })
     .then(() => res.send({ message: 'Карточка удалена.' }))
     .catch((err) => {

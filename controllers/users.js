@@ -7,6 +7,7 @@ const {
   NOT_FOUND_ERR,
   DATA_ERR,
 } = require('../utils/constants');
+const NotFound = require('../errors/NotFound');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -20,21 +21,13 @@ module.exports.getUser = (req, res) => {
     .catch(() => res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' }));
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFound('Пользователь по указанному id не найден.');
     })
     .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(NOT_FOUND_ERR).send({ message: 'Пользователь по указанному id не найден.' });
-      }
-      if (err.name === 'CastError') {
-        return res.status(DATA_ERR).send({ message: 'Неверный формат id.' });
-      }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+    .catch(next);
 };
 
 module.exports.createUser = (req, res) => {
@@ -54,7 +47,6 @@ module.exports.createUser = (req, res) => {
       avatar,
     }))
     .then((user) => {
-      console.log(user);
       res.send({ data: user });
     })
     .catch((err) => {

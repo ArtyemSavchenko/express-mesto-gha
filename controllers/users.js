@@ -53,7 +53,10 @@ module.exports.createUser = (req, res) => {
       about,
       avatar,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      console.log(user);
+      res.send({ data: user });
+    })
     .catch((err) => {
       if (err.code === 11000) {
         return res.status(DATA_ERR).send({ message: 'Пользователь с таким адресом электронной почты уже существует.' });
@@ -65,19 +68,14 @@ module.exports.createUser = (req, res) => {
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, secretKey, { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch((err) => {
-      if (err.status === 401) {
-        return res.status(err.status).send({ message: err.message });
-      }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+    .catch(next);
 };
 
 module.exports.updateUser = (req, res) => {

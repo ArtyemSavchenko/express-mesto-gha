@@ -24,11 +24,10 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .then((card) => {
       if (card.owner.toString() !== userId) {
-        return Promise.reject(new Forbidden('Невозможно удалить чужую карточку.'));
+        return next(new Forbidden('Невозможно удалить чужую карточку.'));
       }
-      return Card.findOneAndDelete({ _id: cardId, owner: userId })
-        .then(() => res.send({ message: 'Карточка удалена.' }))
-        .catch(next);
+      return card.remove()
+        .then(() => res.send({ message: 'Карточка удалена.' }));
     })
     .catch(next);
 };

@@ -7,6 +7,7 @@ const cardsRouter = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { validateLogin, validateRegistration } = require('./middlewares/validation');
+const NotFound = require('./errors/NotFound');
 
 const { PORT = 3000 } = process.env;
 
@@ -21,14 +22,14 @@ app.post('/signup', validateRegistration, createUser);
 app.use(auth);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Страница не существует.' });
+app.use('*', (req, res, next) => {
+  next(new NotFound('Страница не существует.'));
 });
 
 app.use(errors());
 
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
+  const { statusCode = 500, message = 'Что-то пошло не так.' } = err;
   res
     .status(statusCode)
     .send({ message });
@@ -37,6 +38,4 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`App started on port ${PORT}`);
 });

@@ -28,15 +28,17 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findById(req.params.cardId)
+  const userId = req.user._id;
+  const { cardId } = req.params;
+  Card.findById(cardId)
     .orFail(() => {
       throw new NotFound('Каточка с указанным id не найдена.');
     })
     .then((card) => {
-      if (card.owner !== req.user._id) {
+      if (card.owner.toString() !== userId) {
         return Promise.reject(new Forbidden('Невозможно удалить чужую карточку.'));
       }
-      return Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
+      return Card.findOneAndDelete({ _id: cardId, owner: userId })
         .then(() => res.send({ message: 'Карточка удалена.' }))
         .catch(next);
     })

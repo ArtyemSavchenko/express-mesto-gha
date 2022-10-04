@@ -1,5 +1,6 @@
 const BadRequest = require('../errors/BadRequest');
 const Forbidden = require('../errors/Forbidden');
+const NotFound = require('../errors/NotFound');
 const Card = require('../models/card');
 const {
   DEFAULT_ERR,
@@ -27,11 +28,18 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
+  Card.findById(req.params.cardId)
     .orFail(() => {
-      throw new Forbidden('Не удалось удалить карточку');
+      throw new NotFound('Каточка с указанным id не найдена.');
     })
-    .then(() => res.send({ message: 'Карточка удалена.' }))
+    .then((card) => {
+      if (card.owner !== req.user._id) {
+        return Promise.reject(new Forbidden('Невозможно удалить чужую карточку.'));
+      }
+      return Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
+        .then(() => res.send({ message: 'Карточка удалена.' }))
+        .catch(next);
+    })
     .catch(next);
 };
 

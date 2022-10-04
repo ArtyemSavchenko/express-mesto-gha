@@ -2,12 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-const usersRouter = require('./routes/users');
-const cardsRouter = require('./routes/cards');
-const { login, createUser } = require('./controllers/users');
-const auth = require('./middlewares/auth');
-const { validateLogin, validateRegistration } = require('./middlewares/validation');
-const NotFound = require('./errors/NotFound');
+const routes = require('./routes/index');
+const handleErrors = require('./middlewares/handleErrors');
 
 const { PORT = 3000 } = process.env;
 
@@ -17,25 +13,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
-app.post('/signin', validateLogin, login);
-app.post('/signup', validateRegistration, createUser);
-app.use(auth);
-app.use('/users', usersRouter);
-app.use('/cards', cardsRouter);
-app.use('*', (req, res, next) => {
-  next(new NotFound('Страница не существует.'));
-});
+app.use(routes);
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message = 'Что-то пошло не так.' } = err;
-  res
-    .status(statusCode)
-    .send({ message });
-
-  next();
-});
+app.use(handleErrors);
 
 app.listen(PORT, () => {
 });

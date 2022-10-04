@@ -2,11 +2,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { secretKey } = require('../utils/constants');
 const User = require('../models/user');
-const {
-  DEFAULT_ERR,
-  NOT_FOUND_ERR,
-  DATA_ERR,
-} = require('../utils/constants');
 const NotFound = require('../errors/NotFound');
 const Conflict = require('../errors/Conflict');
 
@@ -25,7 +20,7 @@ module.exports.getUser = (req, res, next) => {
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail(() => {
-      throw new NotFound('Пользователь по указанному id не найден.');
+      throw new NotFound('Пользователь не найден.');
     })
     .then((user) => res.send(user))
     .catch(next);
@@ -69,7 +64,7 @@ module.exports.login = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -77,21 +72,13 @@ module.exports.updateUser = (req, res) => {
     { new: true, runValidators: true },
   )
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFound('Пользователь не найден.');
     })
     .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(NOT_FOUND_ERR).send({ message: 'Пользователь c указанным id не найден.' });
-      }
-      if (err.name === 'ValidationError') {
-        return res.status(DATA_ERR).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
-      }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+    .catch(next);
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -99,16 +86,8 @@ module.exports.updateAvatar = (req, res) => {
     { new: true, runValidators: true },
   )
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new NotFound('Пользователь не найден.');
     })
     .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(NOT_FOUND_ERR).send({ message: 'Пользователь c указанным id не найден.' });
-      }
-      if (err.name === 'ValidationError') {
-        return res.status(DATA_ERR).send({ message: 'Переданы некорректные данные при создании пользователя.' });
-      }
-      return res.status(DEFAULT_ERR).send({ message: 'Что-то пошло не так.' });
-    });
+    .catch(next);
 };

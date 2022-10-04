@@ -6,9 +6,11 @@ const {
   updateUser,
   updateAvatar,
 } = require('../controllers/users');
-const validateUserId = require('../middlewares/validateUserId');
-const validateUpdatingAvatar = require('../middlewares/validateUpdatingAvatar');
-const validateUpdatingUser = require('../middlewares/validateUpdatingUser');
+const {
+  validateUserId,
+  validateUpdatingAvatar,
+  validateUpdatingUser,
+} = require('../middlewares/validation');
 
 router.get('/', getUsers);
 router.get('/me', getUser);
